@@ -1,4 +1,5 @@
-// Offsets, settings and shit. TODO: Move these to another file
+// Offsets, settings and shit.
+let input, clearbutton
 let scaleX = 0.01
 let scaleY = 0.01
 let offsetX = 0
@@ -30,6 +31,11 @@ function setup() {
   fill(255)
   textSize(15);
 
+  input = createInput();
+  input.position(20, height + 20);
+  clearbutton = createButton('Clear');
+  clearbutton.position(input.x + input.width + 5, height + 20);
+  clearbutton.mousePressed(() => input.value(''));
 }
 
 
@@ -69,11 +75,6 @@ function draw() {
     }
   }
 
-
-
-  text(scaleX, 100, 100)
-  text(touches, 100, 150)
-
   for (let x = -width / 2; x < width / 2; x++) {
 
     // Calculate current and previous coords to draw function line
@@ -96,11 +97,15 @@ function draw() {
     line(prevX, prevY, realX, realY)
   }
 }
-
-
+x
 function f(x) {
   x = (scaleY * x) + (offsetX * scaleX)
-  func = (e ** x)
+  try {
+    func = eval(input.value())
+  } catch (e) {
+    stroke(255, 0, 0)
+    return (0)
+  }
   return func / scaleX + offsetY
 }
 
