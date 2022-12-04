@@ -5,9 +5,13 @@ let offsetX = 0
 let offsetY = 0
 let unitScale = 1
 
-// These are needed for touch support. will be used later.
+// These are needed for touch support
 let touchDX = 0
 let touchDY = 0
+let touchDdist = 0
+let momentumX = 0
+let momentumY = 0
+let touches = 0
 
 // Setting up constants for use in functions TODO move these to another file as well
 let e = 2.71828182845904
@@ -15,16 +19,29 @@ let pi = 3.14159265359
 let g = 9.81
 let phi = (1 + sqrt(5) / 2)
 
+// Settings
+let mouseMomentum = false
+
 
 function setup() {
   createCanvas(600, 600)
   stroke(255)
   background(0)
+  fill(255)
+  textSize(15);
+
 }
 
 
 
 function draw() {
+  background(0)
+
+  // Handles momentum for touch drag
+  offsetX -= momentumX
+  momentumX -= momentumX * 0.1
+  offsetY -= momentumY
+  momentumY -= momentumY * 0.1
 
   // Handle units being too small / too big
   if (int(unitScale / scaleX) < width / 10) {
@@ -48,12 +65,17 @@ function draw() {
       }
       line(0, width / 2 + y, width, width / 2 + y)
       stroke(100)
+      // text(round((-y - offsetY) * scaleY), 10, width / 2 + y - 10);
     }
   }
 
 
 
+  text(scaleX, 100, 100)
+  text(touches, 100, 150)
+
   for (let x = -width / 2; x < width / 2; x++) {
+
     // Calculate current and previous coords to draw function line
     let realX = (width / 2) + x
     let realY = (height / 2) - f(x)
@@ -83,26 +105,38 @@ function f(x) {
 }
 
 function mouseDragged(event) {
-
   offsetX -= event.movementX
   offsetY -= event.movementY
-  background(0)
   return false
 }
 
-
-function touchMoved(event) {
-  if (sqrt((event.touches[0].screenX - touchDX) ** 2 + (event.touches[0].screenY - touchDY) ** 2) > 50) {
-    touchDX = event.touches[0].screenX
-    touchDY = event.touches[0].screenY
-    return false
-  }
-
-  offsetX -= event.touches[0].screenX - touchDX
-  offsetY -= event.touches[0].screenY - touchDY
+function touchStarted(event) {
   touchDX = event.touches[0].screenX
   touchDY = event.touches[0].screenY
-  background(0)
+  if (event.touches.length == 1) {
+    touches = 1
+  }
+}
+
+function touchMoved(event) {
+  if (event.touches.length > 1) {
+    let currentDist = sqrt(event.touches[0].screenX ** 2 + event.touches[0].screenY ** 2) - sqrt(event.touches[1].screenX ** 2 + event.touches[1].screenY ** 2)
+    if (touches == 2) {
+      scaleX *= (touchDdist / currentDist)
+      scaleY *= (touchDdist / currentDist)
+    }
+    touches = 2
+    touchDdist = currentDist
+  } else {
+    if (touches == 2) return false
+    touches = 1
+    momentumX = event.touches[0].screenX - touchDX
+    momentumY = event.touches[0].screenY - touchDY
+    touchDX = event.touches[0].screenX
+    touchDY = event.touches[0].screenY
+  }
+
+
   return false
 }
 
@@ -116,3 +150,4 @@ function mouseWheel(event) {
 
   return false
 }
+
