@@ -1,10 +1,10 @@
 // Offsets, settings and shit.
-let input, clearbutton
-let scaleX = 0.01
-let scaleY = 0.01
+let funcInput, clearButton, saveButton, myCanvas
+let canvScale = 0.01
 let offsetX = 0
 let offsetY = 0
 let unitScale = 1
+
 
 // These are needed for touch support
 let touchDX = 0
@@ -18,54 +18,47 @@ let touches = 0
 let e = 2.71828182845904
 let pi = 3.14159265359
 let g = 9.81
-let phi = (1 + sqrt(5) / 2)
+// let phi = (1 + sqrt(5) / 2)
 
 // Settings
 let mouseMomentum = false
 
 
 function setup() {
-  createCanvas(600, 600)
+  createCanvas(800, 800)
   stroke(255)
-  background(0)
   fill(255)
   textSize(15);
+  makeUI()
+  myCanvas = document.getElementById("defaultCanvas0")
 
-  input = createInput();
-  input.position(20, height + 20);
-  clearbutton = createButton('Clear');
-  clearbutton.position(input.x + input.width + 5, height + 20);
-  clearbutton.mousePressed(() => input.value(''));
 }
 
-
-
 function draw() {
-  background(0)
-
   // Handles momentum for touch drag
   offsetX -= momentumX
   momentumX -= momentumX * 0.1
   offsetY -= momentumY
   momentumY -= momentumY * 0.1
 
+  background(32, 31, 30)
+
   // Handle units being too small / too big
-  if (int(unitScale / scaleX) < width / 10) {
+  if (int(unitScale / canvScale) < width / 10) {
     unitScale *= 2
   }
-  if (int(unitScale / scaleX) > width / 5) {
+  if (int(unitScale / canvScale) > width / 5) {
     unitScale /= 2
   }
 
   // Calculate unit distances in px
-  let unitDistX = int(unitScale / scaleX)
-  let unitDistY = int(unitScale / scaleY)
+  let unitDist = int(unitScale / canvScale)
 
   stroke(100)
 
   // Draw y axis lines TODO values
   for (let y = -width / 2; y < height / 2; y++) {
-    if ((y + int(offsetY)) % unitDistY == 0) {
+    if ((y + int(offsetY)) % unitDist == 0) {
       if (y + int(offsetY) == 0) {
         stroke(255, 255, 255)
       }
@@ -85,7 +78,7 @@ function draw() {
 
     // Draw x axis grid lines
     stroke(100)
-    if ((x + int(offsetX)) % unitDistX == 0) {
+    if ((x + int(offsetX)) % unitDist == 0) {
       if (x + int(offsetX) == 0) {
         stroke(255, 255, 255)
       }
@@ -93,20 +86,19 @@ function draw() {
     }
 
     // Draw function
-    stroke(255)
+    stroke(255, 150, 150)
     line(prevX, prevY, realX, realY)
   }
 }
-x
+
 function f(x) {
-  x = (scaleY * x) + (offsetX * scaleX)
+  x = (canvScale * x) + (offsetX * canvScale)
   try {
-    func = eval(input.value())
+    func = eval(funcInput.value())
   } catch (e) {
-    stroke(255, 0, 0)
-    return (0)
+    return (Infinity)
   }
-  return func / scaleX + offsetY
+  return func / canvScale + offsetY
 }
 
 function mouseDragged(event) {
@@ -125,10 +117,9 @@ function touchStarted(event) {
 
 function touchMoved(event) {
   if (event.touches.length > 1) {
-    let currentDist = sqrt(event.touches[0].screenX ** 2 + event.touches[0].screenY ** 2) - sqrt(event.touches[1].screenX ** 2 + event.touches[1].screenY ** 2)
+    let currentDist = sqrt(abs((event.touches[0].screenX - event.touches[1].screenX) ** 2 + (event.touches[0].screenY - event.touches[1].screenY) ** 2))
     if (touches == 2) {
-      scaleX *= (touchDdist / currentDist)
-      scaleY *= (touchDdist / currentDist)
+      canvScale *= (touchDdist / currentDist)
     }
     touches = 2
     touchDdist = currentDist
@@ -140,19 +131,33 @@ function touchMoved(event) {
     touchDX = event.touches[0].screenX
     touchDY = event.touches[0].screenY
   }
-
-
   return false
 }
 
 function mouseWheel(event) {
   let delta = event.delta / 1000
-  scaleX = scaleX + scaleX * delta
-  scaleY = scaleY + scaleY * delta
+  canvScale = canvScale + canvScale * delta
   offsetX = offsetX - offsetX * delta
   offsetY = offsetY - offsetY * delta
-  background(0)
-
   return false
 }
 
+function copyCanvas(canv) {
+  canv.toBlob((blob) => {
+    const item = new ClipboardItem({ "image/png": blob });
+    navigator.clipboard.write([item]);
+  });
+}
+
+function makeUI() {
+  let styling = "position: relative; padding-top: auto; padding-right: auto; padding-left: auto; top:30px; left: 0px; z-index: -1; margin-right: 5px; margin-left: 5px"
+  funcInput = createInput('x');
+  funcInput.position(20, height + 20);
+  clearButton = createButton('Clear');
+  clearButton.mousePressed(() => funcInput.value(''));
+  saveButton = createButton('Copy');
+  funcInput.style(styling)
+  clearButton.style(styling)
+  saveButton.style(styling)
+  saveButton.mousePressed(() => copyCanvas(myCanvas));
+}
