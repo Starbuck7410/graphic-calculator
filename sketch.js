@@ -18,7 +18,7 @@ let touches = 0
 let e = 2.71828182845904
 let pi = 3.14159265359
 let g = 9.81
-// let phi = (1 + sqrt(5) / 2)
+let phi = (1 + sqrt(5) / 2)
 
 // Settings
 let mouseMomentum = false
@@ -35,13 +35,14 @@ function setup() {
 }
 
 function draw() {
+
+  background(32, 31, 30)
+
   // Handles momentum for touch drag
   offsetX -= momentumX
   momentumX -= momentumX * 0.1
   offsetY -= momentumY
   momentumY -= momentumY * 0.1
-
-  background(32, 31, 30)
 
   // Handle units being too small / too big
   if (int(unitScale / canvScale) < width / 10) {
@@ -72,13 +73,13 @@ function draw() {
 
     // Calculate current and previous coords to draw function line
     let realX = (width / 2) + x
-    let realY = (height / 2) - f(x)
+    let realY = (height / 2) - f(x, funcInput.value())
     let prevX = (width / 2) + (x - 1)
-    let prevY = (height / 2) - f(x - 1)
+    let prevY = (height / 2) - f(x - 1, funcInput.value())
 
     // Draw x axis grid lines
     stroke(100)
-    if ((x + int(offsetX)) % unitDist == 0) {
+    if (int((x + offsetX) % unitDist) == 0) {
       if (x + int(offsetX) == 0) {
         stroke(255, 255, 255)
       }
@@ -91,15 +92,17 @@ function draw() {
   }
 }
 
-function f(x) {
+function f(x, fx) {
   x = (canvScale * x) + (offsetX * canvScale)
   try {
-    func = eval(funcInput.value())
+    func = eval(fx)
   } catch (e) {
     return (Infinity)
   }
   return func / canvScale + offsetY
 }
+
+
 
 function mouseDragged(event) {
   offsetX -= event.movementX
@@ -119,6 +122,8 @@ function touchMoved(event) {
   if (event.touches.length > 1) {
     let currentDist = sqrt(abs((event.touches[0].screenX - event.touches[1].screenX) ** 2 + (event.touches[0].screenY - event.touches[1].screenY) ** 2))
     if (touches == 2) {
+      offsetX = offsetX / (touchDdist / currentDist)
+      offsetY = offsetY / (touchDdist / currentDist)
       canvScale *= (touchDdist / currentDist)
     }
     touches = 2
@@ -142,13 +147,6 @@ function mouseWheel(event) {
   return false
 }
 
-function copyCanvas(canv) {
-  canv.toBlob((blob) => {
-    const item = new ClipboardItem({ "image/png": blob });
-    navigator.clipboard.write([item]);
-  });
-}
-
 function makeUI() {
   let styling = "position: relative; padding-top: auto; padding-right: auto; padding-left: auto; top:30px; left: 0px; z-index: -1; margin-right: 5px; margin-left: 5px"
   funcInput = createInput('x');
@@ -160,4 +158,11 @@ function makeUI() {
   clearButton.style(styling)
   saveButton.style(styling)
   saveButton.mousePressed(() => copyCanvas(myCanvas));
+}
+
+function copyCanvas(canv) {
+  canv.toBlob((blob) => {
+    const item = new ClipboardItem({ "image/png": blob });
+    navigator.clipboard.write([item]);
+  });
 }
